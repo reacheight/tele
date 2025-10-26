@@ -11,6 +11,9 @@ import buildClassName from '../../../util/buildClassName';
 import useLang from '../../../hooks/useLang';
 import useLastCallback from '../../../hooks/useLastCallback';
 import { getAvailableCommands, searchCommands } from './commands';
+import { filterPeersByQuery } from '../../../global/helpers/peers';
+import usePeerSearch from '../../../hooks/usePeerSearch';
+import { peerGlobalSearch } from '../../../hooks/usePeerSearch';
 
 import Avatar from '../../common/Avatar';
 import Modal from '../../ui/Modal';
@@ -57,26 +60,52 @@ const CommandPalette = ({ isOpen, query = '', chatIds, chatsById, currentUserId,
     return searchCommands(commands, query);
   }, [commands, query]);
 
+  const { result: globalSearchIds } = usePeerSearch({
+    query: query.trim(),
+    queryFn: query.trim().length >= 2 ? peerGlobalSearch : undefined,
+    isDisabled: !query.trim(),
+  });
+
   const chatResults = useMemo(() => {
     if (!chatIds || !chatsById) {
       return [];
     }
 
-    const searchQuery = query.toLowerCase().trim();
-    const mappedChats = chatIds
-      .map((id): SearchResult => ({
+    const searchQuery = query.trim();
+
+    if (!searchQuery) {
+      return chatIds
+        .slice(0, 10)
+        .map((id): SearchResult => ({
+          id,
+          title: chatsById[id]?.title || '',
+          chat: chatsById[id],
+        }))
+        .filter((r) => r.title);
+    }
+
+    const localFilteredIds = filterPeersByQuery({
+      ids: chatIds,
+      query: searchQuery,
+      type: 'peer',
+    });
+
+    let allFilteredIds = localFilteredIds;
+    if (globalSearchIds && globalSearchIds.length > 0) {
+      // Limit global search results to max 3
+      const limitedGlobalIds = globalSearchIds.slice(0, 3);
+      const uniqueIds = [...new Set([...localFilteredIds, ...limitedGlobalIds])];
+      allFilteredIds = uniqueIds;
+    }
+
+    return allFilteredIds
+      .map((id) => ({
         id,
         title: chatsById[id]?.title || '',
         chat: chatsById[id],
       }))
       .filter((r) => r.title);
-
-    if (!searchQuery) {
-      return mappedChats.slice(0, 10);
-    }
-
-    return mappedChats.filter((r) => r.title.toLowerCase().includes(searchQuery));
-  }, [query, chatIds, chatsById]);
+  }, [query, chatIds, chatsById, globalSearchIds]);
 
   const totalResults = commandResults.length + chatResults.length;
 

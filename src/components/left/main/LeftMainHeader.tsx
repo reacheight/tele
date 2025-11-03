@@ -60,6 +60,9 @@ type OwnProps = {
   onSelectContacts: NoneToVoidFunction;
   onSelectArchived: NoneToVoidFunction;
   onReset: NoneToVoidFunction;
+  isSearchExpanded: boolean;
+  expandSearch: NoneToVoidFunction;
+  collapseSearch: NoneToVoidFunction;
 };
 
 type StateProps =
@@ -106,6 +109,9 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
   onSelectContacts,
   onSelectArchived,
   onReset,
+  isSearchExpanded,
+  expandSearch,
+  collapseSearch,
 }) => {
   const {
     setGlobalSearchDate,
@@ -121,7 +127,6 @@ const LeftMainHeader: FC<OwnProps & StateProps> = ({
   const { isMobile } = useAppLayout();
 
   const [isBotMenuOpen, markBotMenuOpen, unmarkBotMenuOpen] = useFlag();
-  const [isSearchExpanded, expandSearch, collapseSearch] = useFlag();
 
   const areContactsVisible = content === LeftColumnContent.Contacts;
   const hasMenu = content === LeftColumnContent.ChatList;

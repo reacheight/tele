@@ -30,6 +30,7 @@ import LeftMainHeader from './LeftMainHeader';
 import CustomButtons from './CustomButtons';
 
 import './LeftMain.scss';
+import useFlag from '../../../hooks/useFlag';
 
 type OwnProps = {
   content: LeftColumnContent;
@@ -72,6 +73,7 @@ const LeftMain: FC<OwnProps> = ({
   const [isNewChatButtonShown, setIsNewChatButtonShown] = useState(IS_TOUCH_ENV);
   const [tauriUpdate, setTauriUpdate] = useState<Update>();
   const [isTauriUpdateDownloading, setIsTauriUpdateDownloading] = useState(false);
+  const [isSearchExpanded, expandSearch, collapseSearch] = useFlag();
 
   const {
     shouldRenderForumPanel, handleForumPanelAnimationEnd,
@@ -187,6 +189,10 @@ const LeftMain: FC<OwnProps> = ({
   );
 
   const lang = useOldLang();
+  const onResetForSearch = useLastCallback(() => {
+    onReset();
+    collapseSearch();
+  });
 
   return (
     <div
@@ -202,9 +208,12 @@ const LeftMain: FC<OwnProps> = ({
         onSelectSettings={handleSelectSettings}
         onSelectContacts={handleSelectContacts}
         onSelectArchived={handleSelectArchived}
-        onReset={onReset}
+        onReset={onResetForSearch}
         shouldSkipTransition={shouldSkipTransition}
         isClosingSearch={isClosingSearch}
+        isSearchExpanded={isSearchExpanded}
+        expandSearch={expandSearch}
+        collapseSearch={collapseSearch}
       />
       <CustomButtons />
       <Transition
@@ -232,7 +241,7 @@ const LeftMain: FC<OwnProps> = ({
                   searchQuery={searchQuery}
                   searchDate={searchDate}
                   isActive={isActive}
-                  onReset={onReset}
+                  onReset={onResetForSearch}
                 />
               );
             case LeftColumnContent.Contacts:
